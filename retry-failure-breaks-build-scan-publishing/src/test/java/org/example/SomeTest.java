@@ -29,14 +29,13 @@ public class SomeTest {
     }
 
     @Test
-    public void test() {
+    public void test_demo_1() {
         Assert.assertTrue(count>0, "Test pass");
     }
 
     @Test()
-    public void test_demo() {
+    public void test_demo_2() {
         log.info("count: {}", count);
         Assert.assertFalse(count > 10, "Test fail when count is bigger than 10");
     }
-
 }
