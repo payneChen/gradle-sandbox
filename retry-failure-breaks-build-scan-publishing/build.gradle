@@ -1,0 +1,85 @@
+import org.gradle.api.tasks.testing.logging.TestLogging
+import org.gradle.api.tasks.testing.logging.TestLoggingContainer
+
+plugins {
+    id 'java-library'
+}
+
+repositories {
+    mavenCentral()
+}
+
+java {
+    toolchain {
+        languageVersion.set(JavaLanguageVersion.of(17))
+    }
+}
+
+configurations.all {
+    transitive = false
+}
+
+dependencies {
+    testImplementation("org.testng:testng:7.7.1")
+    testRuntimeOnly(group: 'org.mockito', name: 'mockito-core', version: '4.8.1')
+    testRuntimeOnly(group: 'org.mockito', name: 'mockito-inline', version: '4.8.1')
+    testRuntimeOnly(group: 'net.bytebuddy', name: 'byte-buddy-agent', version: '1.12.10')
+    testRuntimeOnly("com.beust:jcommander:1.78")
+    testRuntimeOnly("org.junit.platform:junit-platform-launcher:1.9.2")
+    testRuntimeOnly("org.junit.platform:junit-platform-engine:1.9.2")
+    testRuntimeOnly("org.junit.platform:junit-platform-commons:1.9.2")
+    testRuntimeOnly("org.junit.support:testng-engine:1.0.4")
+    testRuntimeOnly("org.junit.jupiter:junit-jupiter-api:5.9.2")
+    testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.9.2")
+    testRuntimeOnly("org.opentest4j:opentest4j:1.2.0")
+    testImplementation("org.slf4j:slf4j-api:2.0.13")
+    testRuntimeOnly("org.slf4j:slf4j-simple:2.0.13")
+    testRuntimeOnly 'ch.qos.logback:logback-classic:1.4.12'
+
+}
+
+tasks.test {
+    maxParallelForks = 4
+    develocity.testRetry {
+            maxRetries = 3
+            maxFailures = 20
+            failOnPassedAfterRetry = true
+    }
+    systemProperty("jdk.attach.allowAttachSelf", "true")
+    systemProperties([
+        'testng.useDefaultListener': 'false',
+        'testng.preserveOrder'     : 'true',
+        ]
+    )
+    Set<String> include = new HashSet<>()
+    include.add("testng")
+    Set<String> exclude = new HashSet<>()
+    exclude.add("junit-jupiter")
+    exclude.add("junit-vintage")
+    useJUnitPlatform { JUnitPlatformOptions options->
+        options.setIncludeEngines(include)
+        options.setExcludeEngines(exclude)
+    }
+
+
+    testLogging { TestLoggingContainer loggingContainer ->
+        // lifecycle
+        loggingContainer.displayGranularity = 4
+        loggingContainer.events 'failed'
+        loggingContainer.exceptionFormat = 'short'
+        loggingContainer.showCauses = true
+        loggingContainer.showStandardStreams = false
+
+        loggingContainer.info { TestLogging logging ->
+            logging.displayGranularity = 4
+            logging.events 'passed', 'skipped', 'failed'
+            logging.showStandardStreams = false
+        }
+
+        loggingContainer.debug { TestLogging logging ->
+            logging.events 'started', 'passed', 'skipped', 'failed'
+            logging.exceptionFormat = 'full'
+            logging.showStandardStreams = true
+        }
+    }
+}
